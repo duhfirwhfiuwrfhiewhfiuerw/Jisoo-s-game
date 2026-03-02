@@ -13,7 +13,7 @@ body{
   font-family: system-ui, -apple-system, sans-serif;
   text-align:center;
   color:#5a0035;
-
+}
 .game{
   max-width:520px;
   margin:40px auto;
@@ -107,15 +107,28 @@ body{
 
 button{
   width:100%;
-  margin:8px 0;
-  padding:12px;
-  font-family:inherit;
-  font-size:10px;
-  background:#ffe6f2;
-  border:3px solid #ff69b4;
+  margin:6px 0;
+  padding:10px 6px;
+
+  font-family:'Press Start 2P', cursive;
+  font-size:9px;
+  line-height:1.4;
+
+  background:#fff0f8;
+  border:3px solid #5c3a18;
+
+  box-shadow:
+    inset -3px -3px 0 #ffb6d5,
+    inset 3px 3px 0 #ffffff;
+
   cursor:pointer;
 }
 
+button:active{
+  box-shadow:
+    inset 3px 3px 0 #ffb6d5,
+    inset -3px -3px 0 #ffffff;
+}
 .hidden{ display:none; }
 .msg{ font-size:10px; margin-top:10px; }
 </style>
