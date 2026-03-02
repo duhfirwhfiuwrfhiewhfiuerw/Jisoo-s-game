@@ -214,7 +214,10 @@ function startGame(){
 function show(){
   document.getElementById("door").classList.remove("open");
   document.getElementById("msg").innerText="";
-  document.getElementById("q").innerText=`🚪 ${step+1}번 방`;
+
+  // 🔥 질문 출력 핵심
+  document.getElementById("q").innerText =
+    `🚪 ${step+1}번 방\n\n${quiz[step].q}`;
 
   const c=document.getElementById("choices");
   c.innerHTML="";
