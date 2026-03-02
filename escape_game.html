@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>당신은 지수에 대해 얼마나 잘 알고있나요?🎮</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  background:#ffd6e8;
+  font-family:'Press Start 2P', cursive;
+  text-align:center;
+  color:#5a0035;
+}
+
+.game{
+  max-width:520px;
+  margin:40px auto;
+  background:#fff0f8;
+  border:6px double #ff69b4;
+  padding:20px;
+  position:relative;
+}
+
+/* 하트 */
+.hearts{
+  font-size:14px;
+  margin-bottom:10px;
+}
+
+/* 방 */
+.room{
+  height:180px;
+  position:relative;
+  margin:20px 0;
+  border:3px dashed #ff69b4;
+  background:#ffe6f2;
+  overflow:hidden;
+}
+
+/* 문 */
+.door{
+  width:60px;
+  height:100px;
+  background:#ff69b4;
+  position:absolute;
+  right:20px;
+  bottom:20px;
+  transition:.6s;
+}
+.door.open{
+  transform:translateX(80px);
+  opacity:0;
+}
+
+/* 캐릭터 */
+.char{
+  width:48px;
+  height:64px;
+  position:absolute;
+  bottom:20px;
+  left:20px;
+  image-rendering:pixelated;
+  background-size:contain;
+  background-repeat:no-repeat;
+}
+
+/* 👧 여자 */
+.girl{
+  background-image:url("https://i.imgur.com/8nQ9YQx.png");
+}
+
+/* 💞 엔딩 */
+.hug{
+  width:160px;
+  height:160px;
+  margin:20px auto;
+  background:url("https://i.imgur.com/2yAfK5f.png") no-repeat center/contain;
+}
+
+button{
+  width:100%;
+  margin:8px 0;
+  padding:12px;
+  font-family:inherit;
+  font-size:10px;
+  background:#ffe6f2;
+  border:3px solid #ff69b4;
+  cursor:pointer;
+}
+
+.hidden{ display:none; }
+.msg{ font-size:10px; margin-top:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+  <!-- BGM & 효과음 -->
+  <audio id="bgm" loop>
+    <source src="bgm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="click">
+    <source src="click.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- 시작 -->
+  <div id="start">
+    <h1>🚪 지수 탈출 게임 🚪</h1>
+    <p class="msg">질문 10개를 모두 맞히면 탈출!</p>
+    <button onclick="startGame()">START</button>
+  </div>
+
+  <!-- 게임 -->
+  <div id="play" class="hidden">
+    <div class="hearts" id="hearts">❤️❤️❤️</div>
+
+    <div class="room">
+      <div class="door" id="door"></div>
+      <div class="char girl" id="char"></div>
+    </div>
+
+    <h1 id="q"></h1>
+    <div id="choices"></div>
+    <p class="msg" id="msg"></p>
+  </div>
+
+  <!-- 엔딩 -->
+  <div id="end" class="hidden">
+    <h1>🎉 탈출 성공 🎉</h1>
+    <div class="hug"></div>
+    <p class="msg">지수에 대해 잘 알고있구나!!💞</p>
+  </div>
+
+  <!-- 게임오버 -->
+  <div id="over" class="hidden">
+    <h1>💔 GAME OVER 💔</h1>
+    <p class="msg">다시 도전해줘…</p>
+    <button onclick="location.reload()">RETRY</button>
+  </div>
+
+</div>
+
+<script>
+const quiz=[
+ {q:"지수가 가장 힘들때 보이는 행동은?",a:["말수가 줄어든다","폭식을 한다","잠을 하루종일 잔다"],c:0},
+ {q:"지수가 가장 좋아하는 음식은?",a:["떡볶이","마라탕","꼬기"],c:0},
+ {q:"지수가 좋아하는 계절은?",a:["봄","가을","겨울"],c:2},
+ {q:"지수가 사랑에서 가장 중요하게 생각하는 건?",a:["설렘","신뢰","표현"],c:1},
+ {q:"지수가 자주 하는 말은?",a:["괜찮아","썸원해줘","배고파"],c:1},
+ {q:"지수가 제일 오래 기억할 순간은?",a:["첫 만남","처음 손잡았을때","좋아한다고 했을때"],c:0},
+ {q:"난 이 나이에 결혼하고싶어! 지수가 결혼하고싶어하는 나이는?",a:["25살","26살","27살"],c:1},
+ {q:"지수의 이상형중에서 제일 중요하게 보는것은?",a:["얼굴",성격","능력"],c:1},
+ {q:"지수가 미래에 가장 중요하게 생각하는건?",a:["안정적인 일상","함께하는 사람","도전하는 삶"],c:1},
+ {q:"지수가 가장 소중히 여기는 건?",a:["추억","선물","돈"],c:2}
+];
+
+let step=0;
+let heart=3;
+let pos=20;
+
+const bgm=document.getElementById("bgm");
+const click=document.getElementById("click");
+
+function startGame(){
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("play").classList.remove("hidden");
+  bgm.play();
+  show();
+}
+
+function show(){
+  document.getElementById("door").classList.remove("open");
+  document.getElementById("msg").innerText="";
+  document.getElementById("q").innerText=`🚪 ${step+1}번 방`;
+
+  const c=document.getElementById("choices");
+  c.innerHTML="";
+  quiz[step].a.forEach((t,i)=>{
+    const b=document.createElement("button");
+    b.innerText=t;
+    b.onclick=()=>check(i);
+    c.appendChild(b);
+  });
+}
+
+function check(i){
+  click.play();
+  if(i===quiz[step].c){
+    document.getElementById("door").classList.add("open");
+    move();
+    step++;
+    setTimeout(()=>{
+      step<quiz.length ? show() : end();
+    },700);
+  }else{
+    heart--;
+    updateHearts();
+    document.getElementById("msg").innerText="🚫 문이 안 열려!";
+    if(heart===0) gameOver();
+  }
+}
+
+function move(){
+  pos+=30;
+  document.getElementById("char").style.left=pos+"px";
+}
+
+function updateHearts(){
+  document.getElementById("hearts").innerText="❤️".repeat(heart);
+}
+
+function end(){
+  document.getElementById("play").classList.add("hidden");
+  document.getElementById("end").classList.remove("hidden");
+}
+
+function gameOver(){
+  document.getElementById("play").classList.add("hidden");
+  document.getElementById("over").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
