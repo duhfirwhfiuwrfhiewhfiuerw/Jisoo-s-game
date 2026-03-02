@@ -41,14 +41,41 @@ body{
 
 /* 문 */
 .door{
-  width:60px;
-  height:100px;
-  background:#ff69b4;
+  width:64px;
+  height:96px;
   position:absolute;
   right:20px;
   bottom:20px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #8b5a2b 0 8px,
+      #7a4a1f 8px 16px
+    );
+
+  border:4px solid #5c3a18;
+  box-shadow:
+    inset 0 0 0 4px #a56a3a,
+    inset 0 0 0 8px #7a4a1f;
+
+  image-rendering: pixelated;
   transition:.6s;
 }
+
+/* 문 손잡이 */
+.door::after{
+  content:"";
+  width:8px;
+  height:8px;
+  background:#3a2a10;
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+}
+
+/* 열릴 때 */
 .door.open{
   transform:translateX(80px);
   opacity:0;
@@ -61,8 +88,12 @@ body{
   position:absolute;
   bottom:20px;
   left:20px;
-  image-rendering:pixelated;
-  background-size:contain;
+
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+
+  background-size: 100% 100%;
   background-repeat:no-repeat;
 }
 
