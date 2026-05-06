@@ -79,7 +79,9 @@ const messages = {
     hint_srt: "내 자리가 어디였지? 오른쪽 상단이었던 것 같은데... 🤔",
     oppa_talk: "리트리버 닮은 사람 보이지? 이 사람이 바로 우리 오빠야!! 우린 장거리 연애를 하고있어서 항상 한달에 한두번씩 보지만 많이 애틋하고 좋아하는 사이야 ❤️",
     car_msg: "이제 차를 타보자!",
-    car_inside_welcome: "주차장에 주차해서 도시락을 먹으러왔어 도시락이랑 형균을 클릭해봐!"
+    car_inside_welcome: "주차장에 주차해서 도시락을 먹으러왔어 도시락이랑 형균을 클릭해봐!",
+    car_oppa: "오빠가 도시락을 와구와구 먹는 모습이 너무 귀엽다.. 다음에도 만들어주고싶다! ❤️",
+    car_lunchbox: "도시락이 처음 가져왔던 거랑 비교해보면 모양이 망가져이따... 마음이 아프다 🍱"
 };
 
 const mapData = {
@@ -129,6 +131,17 @@ const mapData = {
     },
     car_inside: {
         bg: "https://i.imgur.com/OyvVFZN.jpeg", 
+        objects: [
+            { name: 'lunchbox', x: 280, y: 230, w: 70, h: 70, img: "" } // 파란 동그라미 (도시락)
+        ],
+        npcs: [
+            { name: '형균', x: 175, y: 240, w: 60, h: 70 } // 빨간 동그라미 (운전석 형균)
+        ],
+        door: null,
+        bounds: { minX: 10, maxX: 490, minY: 180, maxY: 450 }
+    },
+    restaurant: { // 새로 추가된 밥집 맵
+        bg: "https://via.placeholder.com/500x500.png?text=Restaurant+Scene", 
         objects: [],
         npcs: [],
         door: null,
@@ -145,7 +158,6 @@ playerImages.right.src = "https://i.imgur.com/cQLW6ag.png";
 const backgroundImg = new Image();
 let player = { x: 250, y: 300, size: 55, step: 35, direction: "front", name: "지수" };
 
-// 이미지 프리로드 로직
 Object.values(mapData).forEach(map => {
     map.objects.forEach(obj => {
         if(obj.img) {
@@ -160,7 +172,7 @@ function addText(text) {
     const box = document.getElementById('textBox');
     const newMsg = document.createElement('div');
     newMsg.className = 'msg-entry';
-    newMsg.style.marginBottom = "8px"; // 가독성을 위한 간격
+    newMsg.style.marginBottom = "8px";
     box.appendChild(newMsg);
 
     let i = 0;
@@ -194,8 +206,11 @@ function loadMap(mapName) {
         player.x = 100; player.y = 420;
         addText(messages.parking_msg);
     } else if(mapName === "car_inside") {
-        player.x = 250; player.y = 350;
+        player.x = 220; player.y = 360; // 조수석 부근 시작
         addText(messages.car_inside_welcome);
+    } else if(mapName === "restaurant") {
+        player.x = 250; player.y = 400;
+        addText("배고프다! 맛있는 거 먹으러 가자! 🍲");
     }
 }
 
@@ -233,17 +248,27 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
-    // 1. NPC 클릭 판정
+    // 화면 맨 왼쪽 클릭 시 다음 페이지(밥집)로 이동 (x 좌표 50 이하)
+    if (currentMap === "car_inside" && clickX < 50) {
+        showLoadingBar("식당으로 이동 중...", 3000, "restaurant");
+        return;
+    }
+
+    // NPC 클릭 판정
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
-                if (npc.name === '형균') addText(messages.oppa_talk);
+                if (currentMap === "car_inside" && npc.name === '형균') {
+                    addText(messages.car_oppa);
+                } else if (npc.name === '형균') {
+                    addText(messages.oppa_talk);
+                }
                 return;
             }
         }
     }
 
-    // 2. 오브젝트 클릭 판정
+    // 오브젝트 클릭 판정
     let targetObj = null;
     mapData[currentMap].objects.forEach(obj => {
         if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) {
@@ -264,17 +289,21 @@ function handleInteraction(e) {
             showLoadingBar("차에 타는 중...", 3000, "car_inside");
             return;
         }
+        if (targetObj.name === "lunchbox") {
+            addText(messages.car_lunchbox);
+            return;
+        }
         addText(messages[targetObj.name]);
     }
 
-    // 3. 문 이동 판정
+    // 문 이동 판정
     const door = mapData[currentMap].door;
     if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
         loadMap(door.target);
         return;
     }
 
-    // 4. 일반 캐릭터 이동
+    // 캐릭터 이동
     const diffX = clickX - player.x;
     const diffY = clickY - player.y;
     let nextX = player.x;
@@ -346,10 +375,9 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-// 초기화 로직: 맵 로드 후 환영 메시지 출력
 window.onload = () => { 
     loadMap("room"); 
-    addText(messages.welcome); // 초기 멘트 복구
+    addText(messages.welcome);
     draw(); 
 };
 </script>
