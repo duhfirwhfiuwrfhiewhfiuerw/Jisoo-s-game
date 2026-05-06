@@ -9,7 +9,6 @@
         body { margin: 0; background: #fff3f6; font-family: 'DungGeunMo', monospace; display: flex; flex-direction: column; align-items: center; padding: 10px 0; touch-action: manipulation; overflow-x: hidden; }
         canvas { width: 95%; max-width: 500px; background: #fdf6f0; border: 3px solid #e8cfcf; image-rendering: pixelated; border-radius: 10px; cursor: pointer; display: block; }
         
-        /* 누적 및 스크롤 설정 */
         #textBox {
             width: 95%; max-width: 500px; height: 130px; margin-top: 15px; padding: 15px;
             background: linear-gradient(135deg, #ffffff 0%, #fff5f7 100%);
@@ -17,7 +16,7 @@
             border-radius: 15px; box-sizing: border-box; line-height: 1.6; color: #5a4f4f; font-size: 15px; 
             overflow-y: auto; word-break: keep-all; position: relative;
             scrollbar-width: thin; scrollbar-color: #ffb6c1 transparent;
-            scroll-behavior: smooth; /* 부드러운 스크롤 */
+            scroll-behavior: smooth;
         }
         
         #textBox::-webkit-scrollbar { width: 6px; }
@@ -34,7 +33,6 @@
 <body>
 
 <canvas id="game"></canvas>
-<!-- 초기 내용은 스크립트에서 addText로 삽입합니다 -->
 <div id="textBox"></div>
 
 <div class="music-player">
@@ -61,7 +59,8 @@ const messages = {
     closet: "이건 옷장이야. 중요한 날에는 무슨옷을 입어야 잘보일지 고민을 많이해서 지각한적이 있어",
     kitchen: "오빠한테 도시락을 만들어줘야해 하지만 한번에 성공한적이 없어",
     bench: "조금 일찍 도착했으니까 여기서 열차를 기다릴수 있어",
-    train_body: "내가 타야하는 열차야! 일찍 도착했으니까 빨리타서 안에서 기다리자. 열차에 투명부분을 눌러봐!"
+    train_body: "내가 타야하는 열차야! 일찍 도착했으니까 빨리타서 안에서 기다리자. 열차에 투명부분을 눌러봐!",
+    seat: "내 좌석을 찾았어! 이제 오빠를 만나러 출발해볼까? 🚂"
 };
 
 const mapData = {
@@ -88,10 +87,14 @@ const mapData = {
         bounds: { minX: 30, maxX: 470, minY: 320, maxY: 460 }
     },
     srt_inside: {
-        bg: "https://i.imgur.com/3N4o89c.png", 
-        objects: [],
-        door: { x: 0, y: 400, w: 500, h: 100, target: "station" },
-        bounds: { minX: 50, maxX: 450, minY: 150, maxY: 450 }
+        // [수정 포인트] 아래 배경 URL을 원하는 열차 내부 이미지로 교체하세요!
+        bg: "https://i.imgur.com/ivq7UoM.jpeg", 
+        objects: [
+            // 좌석 예시: 필요 시 img를 추가하거나 위치를 조정하세요.
+            { name: 'seat', x: 200, y: 200, w: 100, h: 100, img: "" } 
+        ],
+        door: { x: 0, y: 440, w: 500, h: 60, target: "station" }, // 아래쪽으로 나가면 다시 역으로
+        bounds: { minX: 50, maxX: 450, minY: 100, maxY: 450 }
     }
 };
 
@@ -113,7 +116,6 @@ Object.values(mapData).forEach(map => {
     });
 });
 
-// 수정된 누적 텍스트 추가 함수
 function addText(text) {
     if(!text) return;
     const box = document.getElementById('textBox');
@@ -125,7 +127,6 @@ function addText(text) {
     const interval = setInterval(() => {
         if (i < text.length) {
             newMsg.innerHTML += text[i++];
-            // 글자가 추가될 때마다 스크롤을 최하단으로 유지
             box.scrollTop = box.scrollHeight;
         } else {
             clearInterval(interval);
@@ -143,15 +144,18 @@ function loadMap(mapName) {
     } else if(mapName === "room") {
         player.x = 400; player.y = 300;
     } else if(mapName === "srt_inside") {
-        player.x = 250; player.y = 420;
-        addText("열차 안이야! 투명창을 잘 눌러서 들어왔구나?");
+        // 세 번째 페이지 진입 시 설정
+        player.x = 250; 
+        player.y = 420; // 가운데 아래 시작
+        addText("열차 안에 들어왔어! 좌석을 찾아가자");
     }
 }
 
 function checkCollision(nx, ny) {
     const objects = mapData[currentMap].objects;
     for (let obj of objects) {
-        if (nx > obj.x - 20 && nx < obj.x + obj.w + 20 &&
+        // 이미지가 있는 오브젝트에 대해서만 충돌 판정 (빈 공간은 통과 가능)
+        if (obj.img && nx > obj.x - 20 && nx < obj.x + obj.w + 20 &&
             ny > obj.y - 10 && ny < obj.y + obj.h + 10) {
             return true;
         }
@@ -169,12 +173,14 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
+    // 문(맵 이동) 판정
     const door = mapData[currentMap].door;
     if (clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
         loadMap(door.target);
         return;
     }
 
+    // 오브젝트 클릭(메시지) 판정
     let targetObj = null;
     mapData[currentMap].objects.forEach(obj => {
         if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) {
@@ -182,6 +188,7 @@ function handleInteraction(e) {
         }
     });
 
+    // 이동 처리
     const diffX = clickX - player.x;
     const diffY = clickY - player.y;
     let nextX = player.x;
@@ -236,10 +243,9 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-// 게임 시작 시 초기화 및 첫 멘트 출력
 window.onload = function() {
     backgroundImg.src = mapData["room"].bg;
-    addText(messages.welcome); // 지수의 방에 온걸 환영해! 출력
+    addText(messages.welcome);
     draw();
 };
 </script>
