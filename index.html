@@ -1,270 +1,247 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>당신은 지수에 대해 얼마나 잘 알고있나요?🎮</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>지수 일기</title>
+    <link href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/DungGeunMo.css" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #fff3f6; font-family: 'DungGeunMo', monospace; display: flex; flex-direction: column; align-items: center; padding: 10px 0; touch-action: manipulation; overflow-x: hidden; }
+        canvas { width: 95%; max-width: 500px; background: #fdf6f0; border: 3px solid #e8cfcf; image-rendering: pixelated; border-radius: 10px; cursor: pointer; display: block; }
+        
+        /* 누적 및 스크롤 설정 */
+        #textBox {
+            width: 95%; max-width: 500px; height: 130px; margin-top: 15px; padding: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #fff5f7 100%);
+            border: 4px solid #e8cfcf; box-shadow: inset 0 0 0 2px #ffffff, 5px 5px 0px rgba(232, 207, 207, 0.5);
+            border-radius: 15px; box-sizing: border-box; line-height: 1.6; color: #5a4f4f; font-size: 15px; 
+            overflow-y: auto; word-break: keep-all; position: relative;
+            scrollbar-width: thin; scrollbar-color: #ffb6c1 transparent;
+            scroll-behavior: smooth; /* 부드러운 스크롤 */
+        }
+        
+        #textBox::-webkit-scrollbar { width: 6px; }
+        #textBox::-webkit-scrollbar-thumb { background-color: #ffb6c1; border-radius: 10px; }
 
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        .msg-entry { margin-bottom: 10px; border-bottom: 1px dashed #ffe0e5; padding-bottom: 6px; }
+        .msg-entry:last-child { border-bottom: none; }
 
-<style>
-body{
-  margin:0;
-  background:#ffd6e8;
-  font-family: system-ui, -apple-system, sans-serif;
-  text-align:center;
-  color:#5a0035;
-}
-.game{
-  max-width:520px;
-  margin:40px auto;
-  background:#fff0f8;
-  border:6px double #ff69b4;
-  padding:20px;
-  position:relative;
-}
-
-/* 하트 */
-.hearts{
-  font-size:14px;
-  margin-bottom:10px;
-}
-
-/* 방 */
-.room{
-  height:180px;
-  position:relative;
-  margin:20px 0;
-  border:3px dashed #ff69b4;
-  background:#ffe6f2;
-  overflow:hidden;
-}
-
-/* 문 */
-.door{
-  width:64px;
-  height:96px;
-  position:absolute;
-  right:20px;
-  bottom:20px;
-
-  background:
-    repeating-linear-gradient(
-      90deg,
-      #8b5a2b 0 8px,
-      #7a4a1f 8px 16px
-    );
-
-  border:4px solid #5c3a18;
-  box-shadow:
-    inset 0 0 0 4px #a56a3a,
-    inset 0 0 0 8px #7a4a1f;
-
-  image-rendering: pixelated;
-  transition:.6s;
-}
-
-/* 문 손잡이 */
-.door::after{
-  content:"";
-  width:8px;
-  height:8px;
-  background:#3a2a10;
-  position:absolute;
-  right:8px;
-  top:50%;
-  transform:translateY(-50%);
-}
-
-/* 열릴 때 */
-.door.open{
-  transform:translateX(80px);
-  opacity:0;
-}
-
-/* 캐릭터 */
-.char{
-  width:64px;
-  height:96px;
-  position:absolute;
-  bottom:20px;
-  left:20px;
-
-  background-size:100% 100%;
-  background-repeat:no-repeat;
-  image-rendering: pixelated;
-}
-/* 👧 여자 */
-.girl{
-  background-image:url("https://i.imgur.com/0XKzn9H.png");
-}
-/* 💞 엔딩 */
-.hug{
-  width:160px;
-  height:160px;
-  margin:20px auto;
-  background:url("https://i.imgur.com/2yAfK5f.png") no-repeat center/contain;
-}
-
-button{
-  width:100%;
-  margin:6px 0;
-  padding:10px 6px;
-
-  font-family:'Press Start 2P', cursive;
-  font-size:9px;
-  line-height:1.4;
-
-  background:#fff0f8;
-  border:3px solid #5c3a18;
-
-  box-shadow:
-    inset -3px -3px 0 #ffb6d5,
-    inset 3px 3px 0 #ffffff;
-
-  cursor:pointer;
-}
-
-button:active{
-  box-shadow:
-    inset 3px 3px 0 #ffb6d5,
-    inset -3px -3px 0 #ffffff;
-}
-.hidden{ display:none; }
-.msg{ font-size:10px; margin-top:10px; }
-</style>
+        .music-player { margin-top: 10px; width: 95%; max-width: 500px; text-align: center; }
+        .music-label { font-size: 12px; color: #e8cfcf; margin-bottom: 5px; }
+        #yt-player { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    </style>
 </head>
-
 <body>
 
-<div class="game">
+<canvas id="game"></canvas>
+<!-- 초기 내용은 스크립트에서 addText로 삽입합니다 -->
+<div id="textBox"></div>
 
-  <!-- BGM & 효과음 -->
-  <audio id="bgm" loop>
-    <source src="bgm.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="click">
-    <source src="click.mp3" type="audio/mpeg">
-  </audio>
-
-  <!-- 시작 -->
-  <div id="start">
-    <h1>🚪 지수 탈출 게임 🚪</h1>
-    <p class="msg">질문 10개를 모두 맞히면 탈출!</p>
-    <button onclick="startGame()">START</button>
-  </div>
-
-  <!-- 게임 -->
-  <div id="play" class="hidden">
-    <div class="hearts" id="hearts">❤️❤️❤️</div>
-
-    <div class="room">
-      <div class="door" id="door"></div>
-      <div class="char girl" id="char"></div>
-    </div>
-
-    <h1 id="q"></h1>
-    <div id="choices"></div>
-    <p class="msg" id="msg"></p>
-  </div>
-
-  <!-- 엔딩 -->
-  <div id="end" class="hidden">
-    <h1>🎉 탈출 성공 🎉</h1>
-    <div class="hug"></div>
-    <p class="msg">지수에 대해 잘 알고있구나!!💞</p>
-  </div>
-
-  <!-- 게임오버 -->
-  <div id="over" class="hidden">
-    <h1>💔 GAME OVER 💔</h1>
-    <p class="msg">다시 도전해줘…</p>
-    <button onclick="location.reload()">RETRY</button>
-  </div>
-
+<div class="music-player">
+    <div class="music-label">Now Playing: 동물의 숲 브금 🍃</div>
+    <iframe id="yt-player"
+        src="https://www.youtube.com/embed/GYediWu_ixw?autoplay=1&loop=1&playlist=GYediWu_ixw&enablejsapi=1" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+    </iframe>
 </div>
 
 <script>
-const quiz=[
- {q:"지수가 가장 힘들때 보이는 행동은?",a:["말수가 줄어든다","폭식을 한다","잠을 하루종일 잔다"],c:0},
- {q:"지수가 가장 좋아하는 음식은?",a:["떡볶이","마라탕","꼬기"],c:0},
- {q:"지수가 좋아하는 계절은?",a:["봄","가을","겨울"],c:2},
- {q:"지수가 사랑에서 가장 중요하게 생각하는 건?",a:["설렘","신뢰","표현"],c:1},
- {q:"지수가 자주 하는 말은?",a:["괜찮아","썸원해줘","배고파"],c:1},
- {q:"지수가 제일 오래 기억할 순간은?",a:["첫 만남","처음 손잡았을때","좋아한다고 했을때"],c:0},
- {q:"난 이 나이에 결혼하고싶어! 지수가 결혼하고싶어하는 나이는?",a:["25살","26살","27살"],c:1},
- {q:"지수의 이상형중에서 제일 중요하게 보는것은?",a:["얼굴","성격","능력"],c:1},
- {q:"지수가 미래에 가장 중요하게 생각하는건?",a:["안정적인 일상","함께하는 사람","도전하는 삶"],c:1},
- {q:"지수가 가장 소중히 여기는 건?",a:["추억","선물","돈"],c:2}
-];
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+canvas.width = 500; canvas.height = 500;
 
-let step=0;
-let heart=3;
-let pos=20;
+let currentMap = "room";
 
-const bgm=document.getElementById("bgm");
-const click=document.getElementById("click");
+const messages = {
+    welcome: "지수의 방에 온걸 환영해! 가구를 클릭하면 지수가 이동하며 말을 할 거야 💗",
+    tv: "어렸을때 티비를 자주봤어. 만화 위주로 봤었던 것같은데 요즘은 잘 안봐",
+    bed: "중요한 날이니까 일찍 일어나야해! 알람맞춰놓고 열차시간 맞춰서 일어났어",
+    table: "화장 다 하고 버스기다릴때 앉아있어야지 오빠한테 카톡보내놔야겠다",
+    bath: "여긴 내가 화장하는 곳이야 따로 화장대가 없어서 여기서 자주 치장해. 얼른 준비해야지!",
+    closet: "이건 옷장이야. 중요한 날에는 무슨옷을 입어야 잘보일지 고민을 많이해서 지각한적이 있어",
+    kitchen: "오빠한테 도시락을 만들어줘야해 하지만 한번에 성공한적이 없어",
+    bench: "조금 일찍 도착했으니까 여기서 열차를 기다릴수 있어",
+    train_body: "내가 타야하는 열차야! 일찍 도착했으니까 빨리타서 안에서 기다리자. 열차에 투명부분을 눌러봐!"
+};
 
-function startGame(){
-  document.getElementById("start").classList.add("hidden");
-  document.getElementById("play").classList.remove("hidden");
-  bgm.play();
-  show();
+const mapData = {
+    room: {
+        bg: "https://i.imgur.com/bMfMr3n.png",
+        objects: [
+            { name: 'closet', x: 30, y: 100, w: 80, h: 100, img: "https://i.imgur.com/GMdqkYn.png" }, 
+            { name: 'bed', x: 190, y: 100, w: 120, h: 90, img: "https://i.imgur.com/gxjbbIY.png" },
+            { name: 'tv', x: 380, y: 100, w: 90, h: 80, img: "https://i.imgur.com/x95Hwnw.png" },
+            { name: 'kitchen', x: 30, y: 340, w: 120, h: 90, img: "https://i.imgur.com/86AUFui.png" },
+            { name: 'table', x: 200, y: 350, w: 100, h: 80, img: "https://i.imgur.com/EnAb1YP.png" },
+            { name: 'bath', x: 380, y: 340, w: 90, h: 90, img: "https://i.imgur.com/viVc6C0.png" }
+        ],
+        door: { x: 460, y: 200, w: 40, h: 100, target: "station" },
+        bounds: { minX: 40, maxX: 460, minY: 150, maxY: 450 }
+    },
+    station: {
+        bg: "https://i.imgur.com/GvvmB4e.jpeg",
+        objects: [
+            { name: 'bench', x: 140, y: 340, w: 180, h: 110, img: "https://i.imgur.com/LM0zkps.png" }, 
+            { name: 'train_body', x: 120, y: 200, w: 320, h: 220, img: "https://i.imgur.com/P0iVk3l.png" } 
+        ],
+        door: { x: 300, y: 220, w: 120, h: 100, target: "srt_inside" },
+        bounds: { minX: 30, maxX: 470, minY: 320, maxY: 460 }
+    },
+    srt_inside: {
+        bg: "https://i.imgur.com/3N4o89c.png", 
+        objects: [],
+        door: { x: 0, y: 400, w: 500, h: 100, target: "station" },
+        bounds: { minX: 50, maxX: 450, minY: 150, maxY: 450 }
+    }
+};
+
+const playerImages = { front: new Image(), back: new Image(), left: new Image(), right: new Image() };
+playerImages.front.src = "https://i.imgur.com/l1ENJqo.png";
+playerImages.back.src = "https://i.imgur.com/nbzUAfX.png";
+playerImages.left.src = "https://i.imgur.com/ginoxYa.png";
+playerImages.right.src = "https://i.imgur.com/cQLW6ag.png";
+
+const backgroundImg = new Image();
+let player = { x: 250, y: 300, size: 55, step: 40, direction: "front", name: "지수" };
+
+Object.values(mapData).forEach(map => {
+    map.objects.forEach(obj => {
+        if(obj.img) {
+            obj.imgObj = new Image();
+            obj.imgObj.src = obj.img;
+        }
+    });
+});
+
+// 수정된 누적 텍스트 추가 함수
+function addText(text) {
+    if(!text) return;
+    const box = document.getElementById('textBox');
+    const newMsg = document.createElement('div');
+    newMsg.className = 'msg-entry';
+    box.appendChild(newMsg);
+
+    let i = 0;
+    const interval = setInterval(() => {
+        if (i < text.length) {
+            newMsg.innerHTML += text[i++];
+            // 글자가 추가될 때마다 스크롤을 최하단으로 유지
+            box.scrollTop = box.scrollHeight;
+        } else {
+            clearInterval(interval);
+        }
+    }, 25);
 }
 
-function show(){
-  document.getElementById("door").classList.remove("open");
-  document.getElementById("msg").innerText="";
+function loadMap(mapName) {
+    currentMap = mapName;
+    backgroundImg.src = mapData[mapName].bg;
 
-  // 🔥 질문 출력 핵심
-  document.getElementById("q").innerText =
-    `🚪 ${step+1}번 방\n\n${quiz[step].q}`;
-
-  const c=document.getElementById("choices");
-  c.innerHTML="";
-  quiz[step].a.forEach((t,i)=>{
-    const b=document.createElement("button");
-    b.innerText=t;
-    b.onclick=()=>check(i);
-    c.appendChild(b);
-  });
+    if(mapName === "station") {
+        player.x = 80; player.y = 420;
+        addText("송정역에 도착했어! 벤치랑 열차를 클릭해봐 ✨");
+    } else if(mapName === "room") {
+        player.x = 400; player.y = 300;
+    } else if(mapName === "srt_inside") {
+        player.x = 250; player.y = 420;
+        addText("열차 안이야! 투명창을 잘 눌러서 들어왔구나?");
+    }
 }
 
-function check(i){
-  click.play();
-  if(i===quiz[step].c){
-    document.getElementById("door").classList.add("open");
-    move();
-    step++;
-    setTimeout(()=>{
-      step<quiz.length ? show() : end();
-    },700);
-  }else{
-    heart--;
-    updateHearts();
-    document.getElementById("msg").innerText="🚫 문이 안 열려!";
-    if(heart===0) gameOver();
-  }
+function checkCollision(nx, ny) {
+    const objects = mapData[currentMap].objects;
+    for (let obj of objects) {
+        if (nx > obj.x - 20 && nx < obj.x + obj.w + 20 &&
+            ny > obj.y - 10 && ny < obj.y + obj.h + 10) {
+            return true;
+        }
+    }
+    return false;
 }
 
-function move(){
-  pos+=30;
-  document.getElementById("char").style.left=pos+"px";
+function handleInteraction(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    const clickX = (clientX - rect.left) * scaleX;
+    const clickY = (clientY - rect.top) * scaleY;
+
+    const door = mapData[currentMap].door;
+    if (clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
+        loadMap(door.target);
+        return;
+    }
+
+    let targetObj = null;
+    mapData[currentMap].objects.forEach(obj => {
+        if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) {
+            targetObj = obj;
+        }
+    });
+
+    const diffX = clickX - player.x;
+    const diffY = clickY - player.y;
+    let nextX = player.x;
+    let nextY = player.y;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0) { nextX += player.step; player.direction = "right"; }
+        else { nextX -= player.step; player.direction = "left"; }
+    } else {
+        if (diffY > 0) { nextY += player.step; player.direction = "front"; }
+        else { nextY -= player.step; player.direction = "back"; }
+    }
+
+    const bounds = mapData[currentMap].bounds;
+    if (nextX >= bounds.minX && nextX <= bounds.maxX && 
+        nextY >= bounds.minY && nextY <= bounds.maxY &&
+        !checkCollision(nextX, nextY)) {
+        player.x = nextX;
+        player.y = nextY;
+    }
+
+    if (targetObj) {
+        addText(messages[targetObj.name]);
+    }
 }
 
-function updateHearts(){
-  document.getElementById("hearts").innerText="❤️".repeat(heart);
+canvas.addEventListener('mousedown', handleInteraction);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInteraction(e); }, {passive: false});
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (backgroundImg.complete) ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+    
+    mapData[currentMap].objects.forEach(obj => {
+        if (obj.imgObj && obj.imgObj.complete) {
+            ctx.drawImage(obj.imgObj, obj.x, obj.y, obj.w, obj.h);
+        }
+    });
+
+    const pImg = playerImages[player.direction];
+    if (pImg.complete) {
+        ctx.drawImage(pImg, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
+    }
+    
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.fillRect(player.x - 25, player.y - 45, 50, 18);
+    ctx.fillStyle = "white";
+    ctx.font = "14px 'DungGeunMo'";
+    ctx.textAlign = "center";
+    ctx.fillText(player.name, player.x, player.y - 31);
+
+    requestAnimationFrame(draw);
 }
 
-function end(){
-  document.getElementById("play").classList.add("hidden");
-  document.getElementById("end").classList.remove("hidden");
-}
-
-function gameOver(){
-  document.getElementById("play").classList.add("hidden");
-  document.getElementById("over").classList.remove("hidden");
-}
+// 게임 시작 시 초기화 및 첫 멘트 출력
+window.onload = function() {
+    backgroundImg.src = mapData["room"].bg;
+    addText(messages.welcome); // 지수의 방에 온걸 환영해! 출력
+    draw();
+};
 </script>
-
 </body>
 </html>
