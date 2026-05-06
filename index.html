@@ -119,11 +119,9 @@ const mapData = {
     suseo_parking: {
         bg: "https://i.imgur.com/uYcIJkq.jpeg", 
         objects: [
-            // 파란색 동그라미 위치 (검정색 제네시스 차량)
             { name: 'car', x: 215, y: 180, w: 55, h: 130, img: "" } 
         ],
         npcs: [
-            // 빨간색 동그라미 위치 (형균)
             { name: '형균', x: 170, y: 220, w: 40, h: 70 } 
         ],
         door: null,
@@ -147,6 +145,7 @@ playerImages.right.src = "https://i.imgur.com/cQLW6ag.png";
 const backgroundImg = new Image();
 let player = { x: 250, y: 300, size: 55, step: 35, direction: "front", name: "지수" };
 
+// 이미지 프리로드 로직
 Object.values(mapData).forEach(map => {
     map.objects.forEach(obj => {
         if(obj.img) {
@@ -161,6 +160,7 @@ function addText(text) {
     const box = document.getElementById('textBox');
     const newMsg = document.createElement('div');
     newMsg.className = 'msg-entry';
+    newMsg.style.marginBottom = "8px"; // 가독성을 위한 간격
     box.appendChild(newMsg);
 
     let i = 0;
@@ -191,7 +191,7 @@ function loadMap(mapName) {
         addText("열차 안에 들어왔어!");
         setTimeout(() => addText(messages.hint_srt), 1000);
     } else if(mapName === "suseo_parking") {
-        player.x = 100; player.y = 420; // 주차장 하단 입구
+        player.x = 100; player.y = 420;
         addText(messages.parking_msg);
     } else if(mapName === "car_inside") {
         player.x = 250; player.y = 350;
@@ -227,13 +227,13 @@ function handleInteraction(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const clientX = (e.clientX || (e.touches && e.touches[0].clientX));
+    const clientY = (e.clientY || (e.touches && e.touches[0].clientY));
     
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
-    // NPC 클릭 판정
+    // 1. NPC 클릭 판정
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
@@ -243,7 +243,7 @@ function handleInteraction(e) {
         }
     }
 
-    // 오브젝트 클릭 판정
+    // 2. 오브젝트 클릭 판정
     let targetObj = null;
     mapData[currentMap].objects.forEach(obj => {
         if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) {
@@ -267,14 +267,14 @@ function handleInteraction(e) {
         addText(messages[targetObj.name]);
     }
 
-    // 문 이동
+    // 3. 문 이동 판정
     const door = mapData[currentMap].door;
     if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
         loadMap(door.target);
         return;
     }
 
-    // 캐릭터 이동
+    // 4. 일반 캐릭터 이동
     const diffX = clickX - player.x;
     const diffY = clickY - player.y;
     let nextX = player.x;
@@ -346,7 +346,12 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-window.onload = () => { loadMap("room"); draw(); };
+// 초기화 로직: 맵 로드 후 환영 메시지 출력
+window.onload = () => { 
+    loadMap("room"); 
+    addText(messages.welcome); // 초기 멘트 복구
+    draw(); 
+};
 </script>
 </body>
 </html>
