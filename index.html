@@ -78,8 +78,8 @@ const messages = {
     parking_msg: "드디어 수서역 도착! 오빠가 주차장에서 기다리고 있을 거야 🚗",
     hint_srt: "내 자리가 어디였지? 오른쪽 상단이었던 것 같은데... 🤔",
     oppa_talk: "리트리버 닮은 사람 보이지? 이 사람이 바로 우리 오빠야!! 우린 장거리 연애를 하고있어서 항상 한달에 한두번씩 보지만 많이 애틋하고 좋아하는 사이야 ❤️",
-    car_msg: "자 그럼 차에 타볼까?",
-    car_inside_welcome: "오빠랑 차 안에서 도시락을 먹으려고 가져온게있어! 클릭해보자"
+    car_msg: "오빠 차 제네시스다! 얼른 타야지~ 🚗",
+    car_inside_welcome: "차 안은 시원하고 좋다! 이제 어디로 갈까? 🛣️"
 };
 
 const mapData = {
@@ -119,16 +119,17 @@ const mapData = {
     suseo_parking: {
         bg: "https://i.imgur.com/uYcIJkq.jpeg", 
         objects: [
-            { name: 'car', x: 110, y: 250, w: 180, h: 120, img: "" } // 제네시스 차량 범위
+            // 파란색 동그라미 위치 (검정색 제네시스 차량)
+            { name: 'car', x: 215, y: 180, w: 55, h: 130, img: "" } 
         ],
         npcs: [
-            { name: '형균', x: 325, y: 280, w: 60, h: 80 } // 형균 위치
+            // 빨간색 동그라미 위치 (형균)
+            { name: '형균', x: 170, y: 220, w: 40, h: 70 } 
         ],
         door: null,
-        bounds: { minX: 20, maxX: 480, minY: 280, maxY: 450 }
+        bounds: { minX: 20, maxX: 480, minY: 180, maxY: 480 }
     },
     car_inside: {
-        // [수정 포인트] 아래 배경 URL을 나중에 차 내부 사진으로 바꾸세요!
         bg: "https://via.placeholder.com/500x500.png?text=Car+Inside+Image", 
         objects: [],
         npcs: [],
@@ -144,7 +145,7 @@ playerImages.left.src = "https://i.imgur.com/ginoxYa.png";
 playerImages.right.src = "https://i.imgur.com/cQLW6ag.png";
 
 const backgroundImg = new Image();
-let player = { x: 250, y: 300, size: 55, step: 40, direction: "front", name: "지수" };
+let player = { x: 250, y: 300, size: 55, step: 35, direction: "front", name: "지수" };
 
 Object.values(mapData).forEach(map => {
     map.objects.forEach(obj => {
@@ -183,7 +184,6 @@ function loadMap(mapName) {
 
     if(mapName === "station") {
         player.x = 80; player.y = 420;
-        addText("송정역에 도착했어! 벤치랑 열차를 클릭해봐 ✨");
     } else if(mapName === "room") {
         player.x = 400; player.y = 300;
     } else if(mapName === "srt_inside") {
@@ -191,7 +191,7 @@ function loadMap(mapName) {
         addText("열차 안에 들어왔어!");
         setTimeout(() => addText(messages.hint_srt), 1000);
     } else if(mapName === "suseo_parking") {
-        player.x = 80; player.y = 420; // 입구에서 시작
+        player.x = 100; player.y = 420; // 주차장 하단 입구
         addText(messages.parking_msg);
     } else if(mapName === "car_inside") {
         player.x = 250; player.y = 350;
@@ -233,7 +233,7 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
-    // NPC 클릭 판정 (형균)
+    // NPC 클릭 판정
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
@@ -241,13 +241,6 @@ function handleInteraction(e) {
                 return;
             }
         }
-    }
-
-    // 문/이동 판정
-    const door = mapData[currentMap].door;
-    if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
-        loadMap(door.target);
-        return;
     }
 
     // 오브젝트 클릭 판정
@@ -263,7 +256,7 @@ function handleInteraction(e) {
             player.x = targetObj.x + targetObj.w / 2;
             player.y = targetObj.y + targetObj.h / 2;
             addText(messages.seat);
-            showLoadingBar("오빠한테 달려가는 중...", 5000, "suseo_parking");
+            showLoadingBar("수서역으로 가는 중...", 5000, "suseo_parking");
             return;
         }
         if (targetObj.name === "car") {
@@ -274,7 +267,14 @@ function handleInteraction(e) {
         addText(messages[targetObj.name]);
     }
 
-    // 이동 처리
+    // 문 이동
+    const door = mapData[currentMap].door;
+    if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
+        loadMap(door.target);
+        return;
+    }
+
+    // 캐릭터 이동
     const diffX = clickX - player.x;
     const diffY = clickY - player.y;
     let nextX = player.x;
@@ -298,21 +298,15 @@ function handleInteraction(e) {
 }
 
 function checkCollision(nx, ny) {
-    // 오브젝트 충돌 (투명 오브젝트 포함)
     const objects = mapData[currentMap].objects;
     for (let obj of objects) {
-        if (nx > obj.x - 20 && nx < obj.x + obj.w + 20 &&
-            ny > obj.y - 10 && ny < obj.y + obj.h + 10) {
-            return true;
-        }
+        if (nx > obj.x - 10 && nx < obj.x + obj.w + 10 &&
+            ny > obj.y - 10 && ny < obj.y + obj.h + 10) return true;
     }
-    // NPC 충돌 (형균)
     const npcs = mapData[currentMap].npcs;
     for (let npc of npcs) {
-        if (nx > npc.x - 20 && nx < npc.x + npc.w + 20 &&
-            ny > npc.y - 10 && ny < npc.y + npc.h + 10) {
-            return true;
-        }
+        if (nx > npc.x - 15 && nx < npc.x + npc.w + 15 &&
+            ny > npc.y - 15 && ny < npc.y + npc.h + 15) return true;
     }
     return false;
 }
@@ -322,38 +316,26 @@ canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInterac
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (backgroundImg.complete) ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
     
-    // 배경
-    if (backgroundImg.complete && backgroundImg.naturalWidth !== 0) {
-        ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
-    }
-    
-    // 오브젝트
     mapData[currentMap].objects.forEach(obj => {
-        if (obj.imgObj && obj.imgObj.complete) {
-            ctx.drawImage(obj.imgObj, obj.x, obj.y, obj.w, obj.h);
-        }
+        if (obj.imgObj && obj.imgObj.complete) ctx.drawImage(obj.imgObj, obj.x, obj.y, obj.w, obj.h);
     });
 
-    // NPC 이름표 (형균)
     if (mapData[currentMap].npcs) {
         mapData[currentMap].npcs.forEach(npc => {
             ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
             ctx.fillRect(npc.x + npc.w/2 - 25, npc.y - 25, 50, 18);
-            ctx.fillStyle = "#ffeb3b"; // NPC 이름은 노란색으로 강조
+            ctx.fillStyle = "#ffeb3b";
             ctx.font = "14px 'DungGeunMo'";
             ctx.textAlign = "center";
             ctx.fillText(npc.name, npc.x + npc.w/2, npc.y - 11);
         });
     }
 
-    // 플레이어
     const pImg = playerImages[player.direction];
-    if (pImg.complete) {
-        ctx.drawImage(pImg, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
-    }
+    if (pImg.complete) ctx.drawImage(pImg, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
     
-    // 플레이어 이름표
     ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
     ctx.fillRect(player.x - 25, player.y - 45, 50, 18);
     ctx.fillStyle = "white";
@@ -364,11 +346,7 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-window.onload = function() {
-    backgroundImg.src = mapData["room"].bg;
-    addText(messages.welcome);
-    draw();
-};
+window.onload = () => { loadMap("room"); draw(); };
 </script>
 </body>
 </html>
