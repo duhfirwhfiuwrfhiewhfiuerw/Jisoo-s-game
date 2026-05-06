@@ -135,19 +135,23 @@ function addText(text) {
 }
 
 function loadMap(mapName) {
+    if (!mapData[mapName]) return;
+    
     currentMap = mapName;
+    
+    // 이미지 소스를 먼저 할당
     backgroundImg.src = mapData[mapName].bg;
 
+    // 맵 이동 시 캐릭터 위치 설정
     if(mapName === "station") {
         player.x = 80; player.y = 420;
         addText("송정역에 도착했어! 벤치랑 열차를 클릭해봐 ✨");
     } else if(mapName === "room") {
         player.x = 400; player.y = 300;
     } else if(mapName === "srt_inside") {
-        // 세 번째 페이지 진입 시 설정
         player.x = 250; 
-        player.y = 420; // 가운데 아래 시작
-        addText("열차 안에 들어왔어! 좌석을 찾아가자");
+        player.y = 420; 
+        addText("열차 안에 들어왔어! 좌석을 찾아가자 🚄");
     }
 }
 
@@ -217,22 +221,32 @@ function handleInteraction(e) {
 
 canvas.addEventListener('mousedown', handleInteraction);
 canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInteraction(e); }, {passive: false});
-
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (backgroundImg.complete) ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
     
+    // 1. 배경 그리기 (로드 완료 여부와 관계없이 src가 있으면 시도)
+    if (backgroundImg.complete && backgroundImg.naturalWidth !== 0) {
+        ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+    } else {
+        // 배경 로딩 중일 때 표시할 배경색
+        ctx.fillStyle = "#fff3f6";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // 2. 오브젝트들 그리기
     mapData[currentMap].objects.forEach(obj => {
-        if (obj.imgObj && obj.imgObj.complete) {
+        if (obj.imgObj && obj.imgObj.complete && obj.imgObj.naturalWidth !== 0) {
             ctx.drawImage(obj.imgObj, obj.x, obj.y, obj.w, obj.h);
         }
     });
 
+    // 3. 캐릭터 그리기
     const pImg = playerImages[player.direction];
-    if (pImg.complete) {
+    if (pImg.complete && pImg.naturalWidth !== 0) {
         ctx.drawImage(pImg, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
     }
     
+    // 4. 이름표 그리기
     ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
     ctx.fillRect(player.x - 25, player.y - 45, 50, 18);
     ctx.fillStyle = "white";
