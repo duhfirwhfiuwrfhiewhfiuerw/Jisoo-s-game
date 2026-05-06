@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>지수 일기</title>
-    <link href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/DungGeunMo.css" rel="stylesheet">
+    <link href="https://cdn.projectnoonnu.co.kr/projectnoonnu/noonfonts_2107@1.1/DungGeunMo.css" rel="stylesheet">
     <style>
         body { margin: 0; background: #fff3f6; font-family: 'DungGeunMo', monospace; display: flex; flex-direction: column; align-items: center; padding: 10px 0; touch-action: manipulation; overflow-x: hidden; }
         canvas { width: 95%; max-width: 500px; background: #fdf6f0; border: 3px solid #e8cfcf; image-rendering: pixelated; border-radius: 10px; cursor: pointer; display: block; }
@@ -22,10 +22,6 @@
         #textBox::-webkit-scrollbar { width: 6px; }
         #textBox::-webkit-scrollbar-thumb { background-color: #ffb6c1; border-radius: 10px; }
 
-        .msg-entry { margin-bottom: 10px; border-bottom: 1px dashed #ffe0e5; padding-bottom: 6px; }
-        .msg-entry:last-child { border-bottom: none; }
-
-        /* 로딩 바 스타일 */
         #loadingOverlay {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 200px; background: rgba(255, 255, 255, 0.9); padding: 15px; border: 3px solid #ffb6c1;
@@ -42,9 +38,8 @@
 
 <div style="position: relative; width: 95%; max-width: 500px;">
     <canvas id="game"></canvas>
-    <!-- 로딩 UI -->
     <div id="loadingOverlay">
-        <div style="font-size: 14px; color: #5a4f4f;">오빠한테 달려가는 중...</div>
+        <div id="loadingText" style="font-size: 14px; color: #5a4f4f;">오빠한테 달려가는 중...</div>
         <div style="width: 100%; background: #eee; border-radius: 5px; margin-top: 5px;">
             <div id="progressBar"></div>
         </div>
@@ -81,7 +76,10 @@ const messages = {
     train_body: "내가 타야하는 열차야! 일찍 도착했으니까 빨리타서 안에서 기다리자. 열차에 투명부분을 눌러봐!",
     seat: "좌석을 찾았어! 이제 오빠 만나러 가보자! 🚂",
     parking_msg: "드디어 수서역 도착! 오빠가 주차장에서 기다리고 있을 거야 🚗",
-    hint_srt: "내 자리가 어디였지? 오른쪽 상단이었던 것 같은데... 🤔"
+    hint_srt: "내 자리가 어디였지? 오른쪽 상단이었던 것 같은데... 🤔",
+    oppa_talk: "리트리버 닮은 사람 보이지? 이 사람이 바로 우리 오빠야!! 우린 장거리 연애를 하고있어서 항상 한달에 한두번씩 보지만 많이 애틋하고 좋아하는 사이야 ❤️",
+    car_msg: "자 그럼 차에 타볼까?",
+    car_inside_welcome: "오빠랑 차 안에서 도시락을 먹으려고 가져온게있어! 클릭해보자"
 };
 
 const mapData = {
@@ -95,6 +93,7 @@ const mapData = {
             { name: 'table', x: 200, y: 350, w: 100, h: 80, img: "https://i.imgur.com/EnAb1YP.png" },
             { name: 'bath', x: 380, y: 340, w: 90, h: 90, img: "https://i.imgur.com/viVc6C0.png" }
         ],
+        npcs: [],
         door: { x: 460, y: 200, w: 40, h: 100, target: "station" },
         bounds: { minX: 40, maxX: 460, minY: 150, maxY: 450 }
     },
@@ -104,6 +103,7 @@ const mapData = {
             { name: 'bench', x: 140, y: 340, w: 180, h: 110, img: "https://i.imgur.com/LM0zkps.png" }, 
             { name: 'train_body', x: 120, y: 200, w: 320, h: 220, img: "https://i.imgur.com/P0iVk3l.png" } 
         ],
+        npcs: [],
         door: { x: 300, y: 220, w: 120, h: 100, target: "srt_inside" },
         bounds: { minX: 30, maxX: 470, minY: 320, maxY: 460 }
     },
@@ -112,14 +112,28 @@ const mapData = {
         objects: [
             { name: 'seat', x: 310, y: 150, w: 80, h: 100, img: "" } 
         ],
+        npcs: [],
         door: null,
         bounds: { minX: 50, maxX: 450, minY: 50, maxY: 450 }
     },
     suseo_parking: {
         bg: "https://i.imgur.com/uYcIJkq.jpeg", 
+        objects: [
+            { name: 'car', x: 110, y: 250, w: 180, h: 120, img: "" } // 제네시스 차량 범위
+        ],
+        npcs: [
+            { name: '형균', x: 325, y: 280, w: 60, h: 80 } // 형균 위치
+        ],
+        door: null,
+        bounds: { minX: 20, maxX: 480, minY: 280, maxY: 450 }
+    },
+    car_inside: {
+        // [수정 포인트] 아래 배경 URL을 나중에 차 내부 사진으로 바꾸세요!
+        bg: "https://via.placeholder.com/500x500.png?text=Car+Inside+Image", 
         objects: [],
-        door: { x: 0, y: 0, w: 0, h: 0, target: "" },
-        bounds: { minX: 20, maxX: 480, minY: 100, maxY: 450 }
+        npcs: [],
+        door: null,
+        bounds: { minX: 50, maxX: 450, minY: 50, maxY: 450 }
     }
 };
 
@@ -175,23 +189,33 @@ function loadMap(mapName) {
     } else if(mapName === "srt_inside") {
         player.x = 250; player.y = 420; 
         addText("열차 안에 들어왔어!");
-        setTimeout(() => addText(messages.hint_srt), 1000); // 힌트 출력
+        setTimeout(() => addText(messages.hint_srt), 1000);
     } else if(mapName === "suseo_parking") {
-        player.x = 250; player.y = 400;
+        player.x = 80; player.y = 420; // 입구에서 시작
         addText(messages.parking_msg);
+    } else if(mapName === "car_inside") {
+        player.x = 250; player.y = 350;
+        addText(messages.car_inside_welcome);
     }
 }
 
-function showLoadingBar() {
+function showLoadingBar(text, duration, targetMap) {
     const overlay = document.getElementById('loadingOverlay');
     const bar = document.getElementById('progressBar');
+    const loadingText = document.getElementById('loadingText');
+    
+    loadingText.innerText = text;
     overlay.style.display = 'block';
+    isTransitioning = true;
+    
     let width = 0;
+    const step = 100 / (duration / 100);
     const interval = setInterval(() => {
         if (width >= 100) {
             clearInterval(interval);
+            loadMap(targetMap);
         } else {
-            width += 2; // 0.1초마다 2%씩 상승 (총 5초)
+            width += step;
             bar.style.width = width + '%';
         }
     }, 100);
@@ -209,12 +233,24 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
+    // NPC 클릭 판정 (형균)
+    if (mapData[currentMap].npcs) {
+        for (let npc of mapData[currentMap].npcs) {
+            if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
+                if (npc.name === '형균') addText(messages.oppa_talk);
+                return;
+            }
+        }
+    }
+
+    // 문/이동 판정
     const door = mapData[currentMap].door;
     if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
         loadMap(door.target);
         return;
     }
 
+    // 오브젝트 클릭 판정
     let targetObj = null;
     mapData[currentMap].objects.forEach(obj => {
         if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) {
@@ -222,21 +258,23 @@ function handleInteraction(e) {
         }
     });
 
-    if (currentMap === "srt_inside" && targetObj && targetObj.name === "seat") {
-        player.x = targetObj.x + targetObj.w / 2;
-        player.y = targetObj.y + targetObj.h / 2;
-        player.direction = "back"; 
-        
-        isTransitioning = true;
-        addText(messages.seat);
-        showLoadingBar(); // 로딩 바 시작
-        
-        setTimeout(() => {
-            loadMap("suseo_parking");
-        }, 5000);
-        return;
+    if (targetObj) {
+        if (targetObj.name === "seat") {
+            player.x = targetObj.x + targetObj.w / 2;
+            player.y = targetObj.y + targetObj.h / 2;
+            addText(messages.seat);
+            showLoadingBar("오빠한테 달려가는 중...", 5000, "suseo_parking");
+            return;
+        }
+        if (targetObj.name === "car") {
+            addText(messages.car_msg);
+            showLoadingBar("차에 타는 중...", 3000, "car_inside");
+            return;
+        }
+        addText(messages[targetObj.name]);
     }
 
+    // 이동 처리
     const diffX = clickX - player.x;
     const diffY = clickY - player.y;
     let nextX = player.x;
@@ -257,17 +295,22 @@ function handleInteraction(e) {
         player.x = nextX;
         player.y = nextY;
     }
-
-    if (targetObj && targetObj.name !== "seat") {
-        addText(messages[targetObj.name]);
-    }
 }
 
 function checkCollision(nx, ny) {
+    // 오브젝트 충돌 (투명 오브젝트 포함)
     const objects = mapData[currentMap].objects;
     for (let obj of objects) {
-        if (obj.img && nx > obj.x - 20 && nx < obj.x + obj.w + 20 &&
+        if (nx > obj.x - 20 && nx < obj.x + obj.w + 20 &&
             ny > obj.y - 10 && ny < obj.y + obj.h + 10) {
+            return true;
+        }
+    }
+    // NPC 충돌 (형균)
+    const npcs = mapData[currentMap].npcs;
+    for (let npc of npcs) {
+        if (nx > npc.x - 20 && nx < npc.x + npc.w + 20 &&
+            ny > npc.y - 10 && ny < npc.y + npc.h + 10) {
             return true;
         }
     }
@@ -280,24 +323,37 @@ canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInterac
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // 배경
     if (backgroundImg.complete && backgroundImg.naturalWidth !== 0) {
         ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
-    } else {
-        ctx.fillStyle = "#fff3f6";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     
+    // 오브젝트
     mapData[currentMap].objects.forEach(obj => {
-        if (obj.imgObj && obj.imgObj.complete && obj.imgObj.naturalWidth !== 0) {
+        if (obj.imgObj && obj.imgObj.complete) {
             ctx.drawImage(obj.imgObj, obj.x, obj.y, obj.w, obj.h);
         }
     });
 
+    // NPC 이름표 (형균)
+    if (mapData[currentMap].npcs) {
+        mapData[currentMap].npcs.forEach(npc => {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+            ctx.fillRect(npc.x + npc.w/2 - 25, npc.y - 25, 50, 18);
+            ctx.fillStyle = "#ffeb3b"; // NPC 이름은 노란색으로 강조
+            ctx.font = "14px 'DungGeunMo'";
+            ctx.textAlign = "center";
+            ctx.fillText(npc.name, npc.x + npc.w/2, npc.y - 11);
+        });
+    }
+
+    // 플레이어
     const pImg = playerImages[player.direction];
-    if (pImg.complete && pImg.naturalWidth !== 0) {
+    if (pImg.complete) {
         ctx.drawImage(pImg, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
     }
     
+    // 플레이어 이름표
     ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
     ctx.fillRect(player.x - 25, player.y - 45, 50, 18);
     ctx.fillStyle = "white";
