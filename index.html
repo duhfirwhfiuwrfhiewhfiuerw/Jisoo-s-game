@@ -221,7 +221,13 @@ function addText(text) {
         }
     }, 25);
 }
-
+function changeBGM(url, title) {
+    const player = document.getElementById('yt-player');
+    const label = document.querySelector('.music-label');
+    const videoId = url.split('v=')[1].split('?')[0].split('&')[0];
+    player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&enablejsapi=1`;
+    label.innerText = `Now Playing: ${title} 🎵`;
+}
 function loadMap(mapName) {
     if (!mapData[mapName]) return;
     currentMap = mapName;
@@ -238,10 +244,15 @@ function loadMap(mapName) {
         addText(messages.car_inside_welcome); 
     }
     else if(mapName === "memory_1") { 
-        player.x = 250; player.y = 450; 
+        player.x = 250; player.y = 250; // 오브젝트들 사이 정중앙에서 시작
         addText(messages.memory_1_msg); 
+        // 알려주신 링크와 제목으로 음악 교체
+        changeBGM("https://www.youtube.com/watch?v=_h19Sxm0YXQ", "sad_ending");
     }
-}
+    else if(mapName === "memory_2") {
+        player.x = 250; player.y = 250;
+        addText("지수의 기억창고2에 도착했어. 오브젝트를 눌러보고 다음페이지에 가려면 오른쪽문을 눌러줘. ");
+    }
 
 function showLoadingBar(text, duration, targetMap) {
     const overlay = document.getElementById('loadingOverlay');
@@ -275,10 +286,12 @@ function handleInteraction(e) {
         return;
     }
 
-    // --- 추가된 로직: 기억창고 1에서 오른쪽 클릭 시 기억창고 2로 이동 ---
-    if (currentMap === "memory_1" && clickX > 440) {
-        showLoadingBar("지수의 기억창고 2로 이동 중...", 3000, "memory_2");
-        return;
+ // 기억창고 1에서 맨 오른쪽 가운데 영역(문) 클릭 시 이동
+    if (currentMap === "memory_1") {
+        if (clickX > 450 && clickY > 200 && clickY < 300) { 
+            showLoadingBar("지수의 기억창고 2로 이동 중...", 3000, "memory_2");
+            return;
+        }
     }
 
     if (mapData[currentMap].npcs) {
