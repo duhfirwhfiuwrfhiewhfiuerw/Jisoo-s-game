@@ -102,6 +102,13 @@ const messages = {
     tteokbokki: "내가 대차게 파워워킹 하고온 그날 숙소에서 엽떡 초보맛 시키고 떡볶이 떡 잘못 시켜서 대참사났던 날.. 나는 그날이 아직도 생생해.. 떡볶이 몇입 먹자마자 쓰러졌던 장면..ㅋㅋㅋㅋ",
     aquarium: "첫만남에 아쿠아리움에 갔었어. 나는 그때 오빠랑 어색하기도하고 사진찍는게 부끄러워서 반응을 시원치않게 했었는데 오빠는 그게 아쿠아리움을 싫어하는 것 처럼 느껴졌었나바.. 나는 나름 이 장소가 우리를 추억할 수있는 장소라고 생각해. 처음 손 잡았던 날.. 부끄럽지만 설렜었어.",
     memory_1_msg: "지수의 기억창고 1에 도착했어! 우리 소중한 추억들을 하나씩 클릭해보고 오른쪽문을 눌러줘."
+    fireworks: "오빠랑 같이 본 불꽃놀이! 하늘이 정말 예뻤어. 여기에 문구를 적어주세요 🎆",
+    cherry_blossom: "봄날의 벚꽃나무 아래서 찍은 사진이 기억나. 여기에 문구를 적어주세요 🌸",
+    fish: "겨울 제철 방어는 오빠랑 먹어서 더 맛있었어! 여기에 문구를 적어주세요 🐟",
+    phone: "매일 밤 오빠랑 했던 긴 전화 통화들.. 여기에 문구를 적어주세요 📞",
+    zombie: "오빠랑 좀비 게임(혹은 영화) 봤을 때! 여기에 문구를 적어주세요 🧟",
+    glamping: "같이 캠핑 가서 고기 구워 먹었던 날! 여기에 문구를 적어주세요 ⛺",
+    memory_2_msg: "지수의 기억창고 2에 도착했어! 우리 추억을 더 구경해보고 오른쪽 문을 눌러줘."
 };
 const mapData = {
     room: {
@@ -177,14 +184,29 @@ const mapData = {
         bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
     },
     memory_2: {
-        bg: "https://i.imgur.com/CkXiP2Y.jpeg", // 배경은 일단 동일하게 설정
+        bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
+        objects: [
+            // 위 줄 (좌표: 60, 205, 350 / 높이: 80 / 크기: 90)
+            { name: 'fireworks', x: 60, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Fireworks" },
+            { name: 'cherry_blossom', x: 205, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Tree" },
+            { name: 'fish', x: 350, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Fish" },
+            
+            // 아래 줄 (좌표: 60, 205, 350 / 높이: 340 / 크기: 90)
+            { name: 'phone', x: 60, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Phone" },
+            { name: 'zombie', x: 205, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Zombie" },
+            { name: 'glamping', x: 350, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Camping" }
+        ],
+        npcs: [],
+        door: { x: 460, y: 200, w: 40, h: 100, target: "memory_3" }, // 다음 페이지 문
+        bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
+    },
+memory_3: {
+        bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
         objects: [],
         npcs: [],
         door: null,
         bounds: { minX: 30, maxX: 470, minY: 100, maxY: 460 }
     }
-};
-
 const playerImages = { front: new Image(), back: new Image(), left: new Image(), right: new Image() };
 playerImages.front.src = "https://i.imgur.com/l1ENJqo.png";
 playerImages.back.src = "https://i.imgur.com/nbzUAfX.png";
@@ -286,14 +308,15 @@ function handleInteraction(e) {
         return;
     }
 
- // 기억창고 1에서 맨 오른쪽 가운데 영역(문) 클릭 시 이동
-    if (currentMap === "memory_1") {
+// 기억창고 1 혹은 2에서 맨 오른쪽 가운데 영역(문) 클릭 시 이동
+    if (currentMap === "memory_1" || currentMap === "memory_2") {
         if (clickX > 450 && clickY > 200 && clickY < 300) { 
-            showLoadingBar("지수의 기억창고 2로 이동 중...", 3000, "memory_2");
+            const nextMap = (currentMap === "memory_1") ? "memory_2" : "memory_3";
+            const mapNum = (currentMap === "memory_1") ? "2" : "3";
+            showLoadingBar(`지수의 기억창고 ${mapNum}로 이동 중...`, 3000, nextMap);
             return;
         }
     }
-
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
