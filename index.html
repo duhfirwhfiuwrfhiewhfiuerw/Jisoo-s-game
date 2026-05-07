@@ -32,6 +32,19 @@
         .music-player { margin-top: 10px; width: 95%; max-width: 500px; text-align: center; }
         .music-label { font-size: 12px; color: #e8cfcf; margin-bottom: 5px; }
         #yt-player { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .msg-entry {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px dashed #e8cfcf; /* 연한 핑크색 점선 구분선 */
+    position: relative;
+}
+
+/* 첫 번째 메시지에는 구분선이 생기지 않도록 설정 */
+.msg-entry:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
     </style>
 </head>
 <body>
