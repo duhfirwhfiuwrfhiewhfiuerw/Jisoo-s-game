@@ -141,7 +141,7 @@ const mapData = {
         bounds: { minX: 10, maxX: 490, minY: 180, maxY: 450 }
     },
     restaurant: {
-        bg: "https://via.placeholder.com/500x500.png?text=Restaurant+Scene", 
+        bg: "https://i.imgur.com/PPBT8Ed.png", 
         objects: [],
         npcs: [],
         door: null,
@@ -198,7 +198,7 @@ function loadMap(mapName) {
     else if(mapName === "srt_inside") { player.x = 250; player.y = 420; addText("열차 안에 들어왔어!"); setTimeout(() => addText(messages.hint_srt), 1000); }
     else if(mapName === "suseo_parking") { player.x = 100; player.y = 420; addText(messages.parking_msg); }
     else if(mapName === "car_inside") { player.x = 250; player.y = 400; addText(messages.car_inside_welcome); }
-    else if(mapName === "restaurant") { player.x = 250; player.y = 400; addText("배고프다! 맛있는 거 먹으러 가자! 🍲"); }
+    else if(mapName === "restaurant") { player.x = 250; player.y = 400; addText("라멘집에 도착했어! 형균이랑 라멘을 클릭해보고 오른쪽을 클릭해 다음페이지로 넘어갈 수있어"); }
 }
 
 function showLoadingBar(text, duration, targetMap) {
