@@ -145,13 +145,13 @@ const mapData = {
     restaurant: {
         bg: "https://i.imgur.com/PPBT8Ed.png", 
         objects: [
-            { name: 'ramen', x: 375, y: 450, w: 60, h: 40, img: "" } // 라멘 클릭 영역
+            { name: 'ramen', x: 150, y: 250, w: 100, h: 100, img: "" } // 라멘 클릭 좌표 수정
         ],
         npcs: [
-            { name: '형균', x: 470, y: 430, w: 50, h: 80 } // 형균 클릭 영역
+            { name: '형균', x: 230, y: 150, w: 120, h: 150 } // 형균 클릭 좌표 수정
         ],
         door: null,
-        bounds: { minX: 50, maxX: 450, minY: 200, maxY: 480 }
+        bounds: { minX: 50, maxX: 450, minY: 320, maxY: 480 } // 캐릭터 이동 범위 수정
     },
     cafe: {
         bg: "https://i.imgur.com/tbgAWGw.png", 
@@ -212,7 +212,7 @@ function loadMap(mapName) {
     else if(mapName === "suseo_parking") { player.x = 100; player.y = 420; addText(messages.parking_msg); }
     else if(mapName === "car_inside") { player.x = 250; player.y = 400; addText(messages.car_inside_welcome); }
     else if(mapName === "restaurant") { 
-        player.x = 250; player.y = 450; // 아래쪽에서 시작
+        player.x = 250; player.y = 450; 
         addText("라멘집에 도착했어! 형균이랑 라멘을 클릭해보고 오른쪽을 클릭해 다음페이지로 넘어갈 수있어"); 
     }
     else if(mapName === "cafe") { player.x = 80; player.y = 400; addText("카페에 도착했어! ☕"); }
@@ -244,19 +244,16 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
-    // 카 안에서 왼쪽 클릭 시 이동
     if (currentMap === "car_inside" && clickX < 60) {
         showLoadingBar("식당으로 이동 중...", 3000, "restaurant");
         return;
     }
 
-    // 식당에서 오른쪽 끝 클릭 시 카페로 이동
     if (currentMap === "restaurant" && clickX > 440) {
         showLoadingBar("카페로 이동 중...", 3000, "cafe");
         return;
     }
 
-    // NPC 클릭
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
@@ -268,7 +265,6 @@ function handleInteraction(e) {
         }
     }
 
-    // 오브젝트 클릭
     let targetObj = null;
     mapData[currentMap].objects.forEach(obj => {
         if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) targetObj = obj;
@@ -292,7 +288,6 @@ function handleInteraction(e) {
         addText(messages[targetObj.name]);
     }
 
-    // 캐릭터 이동 및 문 이동 체크
     const door = mapData[currentMap].door;
     if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) {
         loadMap(door.target);
@@ -347,12 +342,15 @@ function draw() {
 
     if (mapData[currentMap].npcs) {
         mapData[currentMap].npcs.forEach(npc => {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-            ctx.fillRect(npc.x + npc.w/2 - 25, npc.y - 25, 50, 18);
-            ctx.fillStyle = "#ffeb3b";
-            ctx.font = "14px 'DungGeunMo'";
-            ctx.textAlign = "center";
-            ctx.fillText(npc.name, npc.x + npc.w/2, npc.y - 11);
+            // 라멘집(restaurant)에서는 이름표를 그리지 않음
+            if (currentMap !== "restaurant") {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+                ctx.fillRect(npc.x + npc.w/2 - 25, npc.y - 25, 50, 18);
+                ctx.fillStyle = "#ffeb3b";
+                ctx.font = "14px 'DungGeunMo'";
+                ctx.textAlign = "center";
+                ctx.fillText(npc.name, npc.x + npc.w/2, npc.y - 11);
+            }
         });
     }
 
