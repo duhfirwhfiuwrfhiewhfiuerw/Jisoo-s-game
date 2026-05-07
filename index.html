@@ -455,7 +455,7 @@ function handleInteraction(e) {
         if (targetObj.name === "lunchbox") { addText(messages.car_lunchbox); return; }
         addText(messages[targetObj.name]);
     }
-   if (targetObj.name === "final_obj6") {
+   if (targetObj && targetObj.name === "final_obj6") {
 
     addText(messages.final_obj6);
 
@@ -498,12 +498,61 @@ function handleInteraction(e) {
 }
 
 function checkCollision(nx, ny) {
-    const objects = mapData[currentMap].objects;
-    for (let obj of objects) {
-        if (obj.img && nx > obj.x - 10 && nx < obj.x + obj.w + 10 &&
-            ny > obj.y - 10 && ny < obj.y + obj.h + 10) return true;
+
+    // 기억창고 / 실내맵에서는 충돌 없음
+
+    if (
+
+        currentMap.startsWith("memory") ||
+
+        currentMap === "car_inside" ||
+
+        currentMap === "srt_inside"
+
+    ) {
+
+        return false;
+
     }
+
+    const objects = mapData[currentMap].objects;
+
+    for (let obj of objects) {
+
+        // 침대나 큰 가구만 막기
+
+        if (
+
+            obj.name === "bed" ||
+
+            obj.name === "closet" ||
+
+            obj.name === "kitchen"
+
+        ) {
+
+            if (
+
+                nx > obj.x &&
+
+                nx < obj.x + obj.w &&
+
+                ny > obj.y &&
+
+                ny < obj.y + obj.h
+
+            ) {
+
+                return true;
+
+            }
+
+        }
+
+    }
+
     return false;
+
 }
 
 canvas.addEventListener('mousedown', handleInteraction);
