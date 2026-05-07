@@ -82,8 +82,7 @@ const messages = {
     car_inside_welcome: "주차장에 주차해서 도시락을 먹으러왔어! 도시락이랑 형균을 클릭해보고, 다 먹었으면 맨 왼쪽을 클릭해줘!",
     car_oppa: "오빠가 도시락을 와구와구 먹는 모습이 너무 귀엽다.. 다음에도 만들어주고싶다! ❤️",
     car_lunchbox: "도시락이 처음 가져왔던 거랑 비교해보면 모양이 망가져이따... 마음이 아프다 🍱",
-    res_oppa: "오빠랑 라멘집을 많이 가보진 않았는데 문득 성수에서 라멘집을 갔던게 생각이 났어. 난 솔직히 면종류는 좋아하긴 하지만 많이 못 먹었던 탓에 아쉬웠던 기억이 컸던 것같아.",
-    res_ramen: "성수에서 먹었던 라멘은 물론 내가 라멘을 많이 먹어보진 않았지만 오빠랑 먹어서 특히 맛있었던 기억이 나"
+    memory_1_msg: "지수의 기억창고 1에 도착했어! 🌟"
 };
 
 const mapData = {
@@ -142,23 +141,12 @@ const mapData = {
         door: null,
         bounds: { minX: 10, maxX: 490, minY: 180, maxY: 450 }
     },
-    restaurant: {
+    memory_1: {
         bg: "https://i.imgur.com/PPBT8Ed.png", 
-        objects: [
-            { name: 'ramen', x: 150, y: 250, w: 100, h: 100, img: "" } // 라멘 클릭 좌표 수정
-        ],
-        npcs: [
-            { name: '형균', x: 230, y: 150, w: 120, h: 150 } // 형균 클릭 좌표 수정
-        ],
-        door: null,
-        bounds: { minX: 50, maxX: 450, minY: 320, maxY: 480 } // 캐릭터 이동 범위 수정
-    },
-    cafe: {
-        bg: "https://i.imgur.com/tbgAWGw.png", 
         objects: [],
         npcs: [],
         door: null,
-        bounds: { minX: 50, maxX: 450, minY: 50, maxY: 450 }
+        bounds: { minX: 50, maxX: 450, minY: 200, maxY: 480 }
     }
 };
 
@@ -210,12 +198,14 @@ function loadMap(mapName) {
     else if(mapName === "room") { player.x = 100; player.y = 300; }
     else if(mapName === "srt_inside") { player.x = 250; player.y = 420; addText("열차 안에 들어왔어!"); setTimeout(() => addText(messages.hint_srt), 1000); }
     else if(mapName === "suseo_parking") { player.x = 100; player.y = 420; addText(messages.parking_msg); }
-    else if(mapName === "car_inside") { player.x = 250; player.y = 400; addText(messages.car_inside_welcome); }
-    else if(mapName === "restaurant") { 
-        player.x = 250; player.y = 450; 
-        addText("라멘집에 도착했어! 형균이랑 라멘을 클릭해보고 오른쪽을 클릭해 다음페이지로 넘어갈 수있어"); 
+    else if(mapName === "car_inside") { 
+        player.x = 380; player.y = 400; // 조수석 위치에서 시작
+        addText(messages.car_inside_welcome); 
     }
-    else if(mapName === "cafe") { player.x = 80; player.y = 400; addText("카페에 도착했어! ☕"); }
+    else if(mapName === "memory_1") { 
+        player.x = 250; player.y = 450; 
+        addText(messages.memory_1_msg); 
+    }
 }
 
 function showLoadingBar(text, duration, targetMap) {
@@ -244,13 +234,9 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
+    // 카 안에서 왼쪽 클릭 시 지수의 기억창고 1로 이동
     if (currentMap === "car_inside" && clickX < 60) {
-        showLoadingBar("식당으로 이동 중...", 3000, "restaurant");
-        return;
-    }
-
-    if (currentMap === "restaurant" && clickX > 440) {
-        showLoadingBar("카페로 이동 중...", 3000, "cafe");
+        showLoadingBar("지수의 기억창고 1로 이동 중...", 3000, "memory_1");
         return;
     }
 
@@ -258,7 +244,6 @@ function handleInteraction(e) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
                 if (currentMap === "car_inside" && npc.name === '형균') addText(messages.car_oppa);
-                else if (currentMap === "restaurant" && npc.name === '형균') addText(messages.res_oppa);
                 else if (npc.name === '형균') addText(messages.oppa_talk);
                 return;
             }
@@ -284,7 +269,6 @@ function handleInteraction(e) {
             return;
         }
         if (targetObj.name === "lunchbox") { addText(messages.car_lunchbox); return; }
-        if (targetObj.name === "ramen") { addText(messages.res_ramen); return; }
         addText(messages[targetObj.name]);
     }
 
@@ -342,8 +326,7 @@ function draw() {
 
     if (mapData[currentMap].npcs) {
         mapData[currentMap].npcs.forEach(npc => {
-            // 라멘집(restaurant)에서는 이름표를 그리지 않음
-            if (currentMap !== "restaurant") {
+            if (currentMap !== "memory_1") {
                 ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
                 ctx.fillRect(npc.x + npc.w/2 - 25, npc.y - 25, 50, 18);
                 ctx.fillStyle = "#ffeb3b";
