@@ -171,40 +171,33 @@ const mapData = {
     memory_2: {
         bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
         objects: [
-            { name: 'fireworks', x: 60, y: 80, w: 90, h: 90, img: "https://i.imgur.com/FSHcmEu.png" },
-            { name: 'cherry_blossom', x: 205, y: 80, w: 90, h: 90, img: "https://i.imgur.com/yncn9So.png" },
-            { name: 'fish', x: 350, y: 80, w: 90, h: 90, img: "https://i.imgur.com/LFWJbqG.png" },
-            { name: 'phone', x: 60, y: 340, w: 90, h: 90, img: "https://i.imgur.com/dVOY20i.png" },
-            { name: 'zombie', x: 205, y: 340, w: 90, h: 90, img: "https://i.imgur.com/fq2bQv4.png" },
+            // ... 기존의 fireworks, cherry_blossom 등 객체들 ...
             { name: 'glamping', x: 350, y: 340, w: 90, h: 90, img: "https://i.imgur.com/aZLTmZC.png" }
         ],
         npcs: [],
-        door: null, // handleInteraction에서 특수 처리
+        door: null, 
         bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
-    },
+    }, // <--- 이 콤마와 중괄호가 중요해요!
     life_story: {
         bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
         objects: [
-            // 위 줄 (기억창고 1, 2와 동일한 좌표)
             { name: 'life_1', x: 60, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story1" },
             { name: 'life_2', x: 205, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story2" },
             { name: 'life_3', x: 350, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story3" },
-            
-            // 아래 줄 (기억창고 1, 2와 동일한 좌표)
             { name: 'life_4', x: 60, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story4" },
             { name: 'life_5', x: 205, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story5" },
             { name: 'life_6', x: 350, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story6" }
         ],
         npcs: [],
-        door: { x: 460, y: 200, w: 40, h: 100, target: "memory_4" }, 
+        door: null,
         bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
     },
-    memory_4: { // 다음 페이지 미리 생성
+    memory_4: { 
         bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
         objects: [], npcs: [], door: null,
         bounds: { minX: 30, maxX: 470, minY: 100, maxY: 460 }
     }
-
+}; // <--- mapData 객체를 완전히 닫아주는 부분
 const playerImages = { front: new Image(), back: new Image(), left: new Image(), right: new Image() };
 playerImages.front.src = "https://i.imgur.com/l1ENJqo.png";
 playerImages.back.src = "https://i.imgur.com/nbzUAfX.png";
@@ -264,10 +257,8 @@ function loadMap(mapName) {
     else if(mapName === "car_inside") { player.x = 380; player.y = 400; addText(messages.car_inside_welcome); }
     else if(mapName === "memory_1") { player.x = 250; player.y = 250; addText(messages.memory_1_msg); changeBGM("https://www.youtube.com/watch?v=_h19Sxm0YXQ", "sad_ending"); }
     else if(mapName === "memory_2") { player.x = 250; player.y = 250; addText(messages.memory_2_msg); }
-else if(mapName === "life_story") {
-        player.x = 250; player.y = 250; // 정중앙 시작
-        addText(messages.life_story_msg);
-    }
+    else if(mapName === "life_story") { player.x = 250; player.y = 250; addText(messages.life_story_msg); }
+} // <--- 함수의 끝을 알리는 중괄호
 
 function showLoadingBar(text, duration, targetMap) {
     const overlay = document.getElementById('loadingOverlay');
@@ -297,10 +288,9 @@ function handleInteraction(e) {
         showLoadingBar("지수의 기억창고 1로 이동 중...", 3000, "memory_1");
         return;
     }
-
-    // 기억창고 1, 2 혹은 인생이야기에서 문 클릭 시 이동
+// 기억창고 1 -> 2 -> 인생이야기 -> 다음 순으로 이동
     if (currentMap === "memory_1" || currentMap === "memory_2" || currentMap === "life_story") {
-        if (clickX > 450 && clickY > 200 && clickY < 300) { 
+        if (clickX > 430 && clickY > 150 && clickY < 350) { 
             let nextTarget, barText;
             
             if(currentMap === "memory_1") {
@@ -318,7 +308,6 @@ function handleInteraction(e) {
             return;
         }
     }
-
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
             if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
