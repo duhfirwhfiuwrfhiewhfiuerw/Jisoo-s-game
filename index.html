@@ -149,19 +149,25 @@ const mapData = {
     memory_1: {
         bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
         objects: [
-            // 위 줄 (Top Row)
-            { name: 'pepero', x: 80, y: 120, w: 70, h: 70, img: "https://i.imgur.com/7szuOiR.png" },
-            { name: 'ski', x: 215, y: 120, w: 70, h: 70, img: "https://i.imgur.com/UFQlxVr.png" },
-            { name: 'cablecar', x: 350, y: 120, w: 70, h: 70, img: "https://i.imgur.com/GGQc1tV.png" },
+            // 위 줄 (윗벽 쪽 배치, 크기 90으로 확대)
+            { name: 'pepero', x: 60, y: 80, w: 90, h: 90, img: "https://i.imgur.com/7szuOiR.png" },
+            { name: 'ski', x: 205, y: 80, w: 90, h: 90, img: "https://i.imgur.com/UFQlxVr.png" },
+            { name: 'cablecar', x: 350, y: 80, w: 90, h: 90, img: "https://i.imgur.com/GGQc1tV.png" },
             
-            // 아래 줄 (Bottom Row)
-            { name: 'kitty_cake', x: 80, y: 280, w: 70, h: 70, img: "https://i.imgur.com/ln4ZU74.png" },
-            { name: 'tteokbokki', x: 215, y: 280, w: 70, h: 70, img: "https://i.imgur.com/uhmDqcp.png" },
-            { name: 'aquarium', x: 350, y: 280, w: 70, h: 70, img: "https://i.imgur.com/9Xir0W9.png" }
+            // 아래 줄 (아랫벽 쪽 배치, 크기 90으로 확대)
+            { name: 'kitty_cake', x: 60, y: 340, w: 90, h: 90, img: "https://i.imgur.com/ln4ZU74.png" },
+            { name: 'tteokbokki', x: 205, y: 340, w: 90, h: 90, img: "https://i.imgur.com/uhmDqcp.png" },
+            { name: 'aquarium', x: 350, y: 340, w: 90, h: 90, img: "https://i.imgur.com/9Xir0W9.png" }
         ],
         npcs: [],
         door: null,
-        // 오브젝트 주변을 돌아다닐 수 있도록 경계 설정
+        bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
+    },
+    memory_2: {
+        bg: "https://i.imgur.com/CkXiP2Y.jpeg", // 배경은 일단 동일하게 설정
+        objects: [],
+        npcs: [],
+        door: null,
         bounds: { minX: 30, maxX: 470, minY: 100, maxY: 460 }
     }
 };
@@ -255,6 +261,12 @@ function handleInteraction(e) {
         showLoadingBar("지수의 기억창고 1로 이동 중...", 3000, "memory_1");
         return;
     }
+
+    // --- 추가된 로직: 기억창고 1에서 오른쪽 클릭 시 기억창고 2로 이동 ---
+    if (currentMap === "memory_1" && clickX > 440) {
+        showLoadingBar("지수의 기억창고 2로 이동 중...", 3000, "memory_2");
+        return;
+    }}
 
     if (mapData[currentMap].npcs) {
         for (let npc of mapData[currentMap].npcs) {
