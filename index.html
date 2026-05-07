@@ -99,6 +99,13 @@ const messages = {
     zombie: "좀비고 추천해준지 몇주 좀 넘은거 같은데 오빠가 이런 스토리있는 게임 좋아할줄 알았어 히히 혼자서 유튜브로 좀비고스토리 찾아본것도 귀엽더라. 괜찮아지면 나랑 꼭 좀비고 다시하기로 약속해! 우리 커플된지 얼마 안됐다구",
     glamping: "글램핑장 새로 오픈한 곳 갔었지? 내가 생각했던 그 감성은 아니었지만 글램핑장에서 고기구워먹고 한강라면 먹었던게 뭔가 여행온듯한 느낌이었어. 잠시 힐링할 수있어서 좋은 추억으로 남은 기억이야.",
     memory_2_msg: "지수의 기억창고 2에 도착했어! 우리 추억을 더 구경해보고 오른쪽 문을 눌러줘."
+    life_1: "첫 번째 인생 이야기: 여기에 내용을 적어주세요.",
+    life_2: "두 번째 인생 이야기: 여기에 내용을 적어주세요.",
+    life_3: "세 번째 인생 이야기: 여기에 내용을 적어주세요.",
+    life_4: "네 번째 인생 이야기: 여기에 내용을 적어주세요.",
+    life_5: "다섯 번째 인생 이야기: 여기에 내용을 적어주세요.",
+    life_6: "여섯 번째 인생 이야기: 여기에 내용을 적어주세요.",
+    life_story_msg: "지수의 인생이야기에 도착했어! 내 소중한 이야기들을 하나씩 클릭해봐."
 };
 
 const mapData = {
@@ -175,14 +182,28 @@ const mapData = {
         door: null, // handleInteraction에서 특수 처리
         bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
     },
-    memory_3: {
+    life_story: {
         bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
-        objects: [],
+        objects: [
+            // 위 줄 (기억창고 1, 2와 동일한 좌표)
+            { name: 'life_1', x: 60, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story1" },
+            { name: 'life_2', x: 205, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story2" },
+            { name: 'life_3', x: 350, y: 80, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story3" },
+            
+            // 아래 줄 (기억창고 1, 2와 동일한 좌표)
+            { name: 'life_4', x: 60, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story4" },
+            { name: 'life_5', x: 205, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story5" },
+            { name: 'life_6', x: 350, y: 340, w: 90, h: 90, img: "https://via.placeholder.com/90?text=Story6" }
+        ],
         npcs: [],
-        door: null,
+        door: { x: 460, y: 200, w: 40, h: 100, target: "memory_4" }, 
+        bounds: { minX: 20, maxX: 480, minY: 80, maxY: 460 }
+    },
+    memory_4: { // 다음 페이지 미리 생성
+        bg: "https://i.imgur.com/CkXiP2Y.jpeg", 
+        objects: [], npcs: [], door: null,
         bounds: { minX: 30, maxX: 470, minY: 100, maxY: 460 }
     }
-};
 
 const playerImages = { front: new Image(), back: new Image(), left: new Image(), right: new Image() };
 playerImages.front.src = "https://i.imgur.com/l1ENJqo.png";
@@ -243,7 +264,10 @@ function loadMap(mapName) {
     else if(mapName === "car_inside") { player.x = 380; player.y = 400; addText(messages.car_inside_welcome); }
     else if(mapName === "memory_1") { player.x = 250; player.y = 250; addText(messages.memory_1_msg); changeBGM("https://www.youtube.com/watch?v=_h19Sxm0YXQ", "sad_ending"); }
     else if(mapName === "memory_2") { player.x = 250; player.y = 250; addText(messages.memory_2_msg); }
-}
+else if(mapName === "life_story") {
+        player.x = 250; player.y = 250; // 정중앙 시작
+        addText(messages.life_story_msg);
+    }
 
 function showLoadingBar(text, duration, targetMap) {
     const overlay = document.getElementById('loadingOverlay');
@@ -274,11 +298,23 @@ function handleInteraction(e) {
         return;
     }
 
-    if (currentMap === "memory_1" || currentMap === "memory_2") {
+    // 기억창고 1, 2 혹은 인생이야기에서 문 클릭 시 이동
+    if (currentMap === "memory_1" || currentMap === "memory_2" || currentMap === "life_story") {
         if (clickX > 450 && clickY > 200 && clickY < 300) { 
-            const nextMap = (currentMap === "memory_1") ? "memory_2" : "memory_3";
-            const mapNum = (currentMap === "memory_1") ? "2" : "3";
-            showLoadingBar(`지수의 기억창고 ${mapNum}로 이동 중...`, 3000, nextMap);
+            let nextTarget, barText;
+            
+            if(currentMap === "memory_1") {
+                nextTarget = "memory_2";
+                barText = "지수의 기억창고 2로 이동 중...";
+            } else if(currentMap === "memory_2") {
+                nextTarget = "life_story";
+                barText = "지수의 인생이야기로 이동 중...";
+            } else {
+                nextTarget = "memory_4";
+                barText = "다음 페이지로 이동 중...";
+            }
+            
+            showLoadingBar(barText, 3000, nextTarget);
             return;
         }
     }
