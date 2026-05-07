@@ -8,6 +8,7 @@
     <style>
         body { margin: 0; background: #fff3f6; font-family: 'DungGeunMo', monospace; display: flex; flex-direction: column; align-items: center; padding: 10px 0; touch-action: manipulation; overflow-x: hidden; }
         canvas { width: 95%; max-width: 500px; background: #fdf6f0; border: 3px solid #e8cfcf; image-rendering: pixelated; border-radius: 10px; cursor: pointer; display: block; }
+        
         #textBox {
             width: 95%; max-width: 500px; height: 130px; margin-top: 15px; padding: 15px;
             background: linear-gradient(135deg, #ffffff 0%, #fff5f7 100%);
@@ -15,12 +16,14 @@
             border-radius: 15px; box-sizing: border-box; line-height: 1.6; color: #5a4f4f; font-size: 15px; 
             overflow-y: auto; word-break: keep-all; position: relative;
         }
+        
         #loadingOverlay {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 200px; background: rgba(255, 255, 255, 0.9); padding: 15px; border: 3px solid #ffb6c1;
             border-radius: 10px; text-align: center; z-index: 10;
         }
         #progressBar { width: 0%; height: 15px; background: #ffb6c1; margin-top: 10px; border-radius: 5px; transition: width 0.1s linear; }
+
         .music-player { margin-top: 10px; width: 95%; max-width: 500px; text-align: center; }
         .music-label { font-size: 12px; color: #e8cfcf; margin-bottom: 5px; }
         #yt-player { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -38,13 +41,14 @@
         </div>
     </div>
 </div>
+
 <div id="textBox"></div>
 
 <div class="music-player">
     <div class="music-label">Now Playing: 동물의 숲 브금 🍃</div>
     <iframe id="yt-player"
         src="https://www.youtube.com/embed/GYediWu_ixw?autoplay=1&loop=1&playlist=GYediWu_ixw&enablejsapi=1" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+        allow="autoplay">
     </iframe>
 </div>
 
@@ -124,7 +128,7 @@ const mapData = {
     },
     srt_inside: {
         bg: "https://i.imgur.com/ivq7UoM.jpeg", 
-        objects: [{ name: 'seat', x: 310, y: 150, w: 80, h: 100, img: "" }],
+        objects: [{ name: 'seat', x: 300, y: 120, w: 120, h: 120, img: "" }], // 클릭 범위 넉넉하게 수정
         npcs: [], door: null, bounds: { minX: 50, maxX: 450, minY: 50, maxY: 450 }
     },
     suseo_parking: {
@@ -188,10 +192,7 @@ let player = { x: 250, y: 300, size: 55, step: 35, direction: "front", name: "�
 
 Object.values(mapData).forEach(map => {
     map.objects.forEach(obj => {
-        if(obj.img) {
-            obj.imgObj = new Image();
-            obj.imgObj.src = obj.img;
-        }
+        if(obj.img) { obj.imgObj = new Image(); obj.imgObj.src = obj.img; }
     });
 });
 
@@ -216,8 +217,9 @@ function loadMap(mapName) {
     document.getElementById('loadingOverlay').style.display = 'none';
 
     if(mapName === "station") { player.x = 80; player.y = 420; }
-    else if(mapName === "room") { player.x = 100; player.y = 300; }
-    else if(mapName === "srt_inside") { player.x = 250; player.y = 420; }
+    else if(mapName === "srt_inside") { player.x = 250; player.y = 420; addText("열차 안에 들어왔어!"); setTimeout(() => addText(messages.hint_srt), 1000); }
+    else if(mapName === "suseo_parking") { player.x = 100; player.y = 420; addText(messages.parking_msg); }
+    else if(mapName === "car_inside") { player.x = 380; player.y = 400; addText(messages.car_inside_welcome); }
     else if(mapName === "memory_1" || mapName === "memory_2" || mapName === "life_story") { player.x = 250; player.y = 250; addText(messages[mapName + "_msg"]); }
 }
 
@@ -230,8 +232,8 @@ function showLoadingBar(text, duration, targetMap) {
     let width = 0;
     const interval = setInterval(() => {
         if (width >= 100) { clearInterval(interval); loadMap(targetMap); }
-        else { width += 1; bar.style.width = width + '%'; }
-    }, duration / 100);
+        else { width += 2; bar.style.width = width + '%'; } // 조금 더 빨리 차게 수정
+    }, duration / 50);
 }
 
 function handleInteraction(e) {
@@ -244,41 +246,44 @@ function handleInteraction(e) {
     const clickX = (clientX - rect.left) * scaleX;
     const clickY = (clientY - rect.top) * scaleY;
 
-    if ((currentMap === "memory_1" || currentMap === "memory_2" || currentMap === "life_story") && clickX > 430 && clickY > 150 && clickY < 350) {
+    // 맵 전환 화살표 클릭 (기억창고 등)
+    if ((currentMap === "memory_1" || currentMap === "memory_2" || currentMap === "life_story") && clickX > 430) {
         if(currentMap === "memory_1") showLoadingBar("창고 2로 이동 중...", 2000, "memory_2");
         else if(currentMap === "memory_2") showLoadingBar("인생 이야기로 이동 중...", 2000, "life_story");
         return;
     }
 
-    if (currentMap === "car_inside" && clickX < 60) {
-        showLoadingBar("지수의 기억창고 1로 이동 중...", 3000, "memory_1");
-        return;
-    }
-
+    // 오브젝트 상호작용
     let targetObj = null;
     mapData[currentMap].objects.forEach(obj => {
         if (clickX > obj.x && clickX < obj.x + obj.w && clickY > obj.y && clickY < obj.y + obj.h) targetObj = obj;
     });
 
     if (targetObj) {
-        if (targetObj.name === "seat") { showLoadingBar("수서역 이동 중...", 3000, "suseo_parking"); return; }
-        if (targetObj.name === "car") { showLoadingBar("차에 타는 중...", 2000, "car_inside"); return; }
-        addText(messages[targetObj.name]); return;
-    }
-
-    if (mapData[currentMap].npcs) {
-        for (let npc of mapData[currentMap].npcs) {
-            if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
-                if (currentMap === "car_inside" && npc.name === '형균') addText(messages.car_oppa);
-                else if (npc.name === '형균') addText(messages.oppa_talk);
-                return;
-            }
+        if (targetObj.name === "seat") { 
+            addText(messages.seat); 
+            showLoadingBar("수서역으로 가는 중...", 3000, "suseo_parking"); 
+            return; 
         }
+        if (targetObj.name === "car") { showLoadingBar("차에 타는 중...", 2000, "car_inside"); return; }
+        addText(messages[targetObj.name]); 
+        return;
     }
 
+    // NPC 상호작용 (형균)
+    if (mapData[currentMap].npcs) {
+        mapData[currentMap].npcs.forEach(npc => {
+            if (clickX > npc.x && clickX < npc.x + npc.w && clickY > npc.y && clickY < npc.y + npc.h) {
+                addText(currentMap === "car_inside" ? messages.car_oppa : messages.oppa_talk);
+            }
+        });
+    }
+
+    // 문 상호작용
     const door = mapData[currentMap].door;
     if (door && clickX > door.x && clickX < door.x + door.w && clickY > door.y && clickY < door.y + door.h) { loadMap(door.target); return; }
 
+    // 캐릭터 이동
     const diffX = clickX - player.x;
     const diffY = clickY - player.y;
     if (Math.abs(diffX) > Math.abs(diffY)) {
